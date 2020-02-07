@@ -20,8 +20,8 @@ class S(BaseHTTPRequestHandler):
         time2 = times[2].split('</div>')[0]
         time3 = times[3].split('</div>')[0]
         time4 = times[4].split('</div>')[0]
-        return json.dumps({'southbound1':time1, 'southbound2':time2, 
-                           'northbound1':time3, 'northbound2':time4})
+        return json.dumps({'northbound1':time1, 'northbound2':time2, 
+                           'southbound1':time3, 'southbound2':time4})
 
     def _set_headers(self):
         self.send_response(200)
