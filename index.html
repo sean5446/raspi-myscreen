@@ -1,0 +1,109 @@
+<html>
+<head>
+<style>
+body {
+    background-color: black;
+    font-weight: bold;
+    font-family: sans-serif;
+    font-size: 90px;
+    text-align: center;
+    color: white;
+}
+#mainbox {
+    width: 690px;
+    height: 460px;
+    /* border: 1px solid red; */
+    margin-left: 5px;
+}
+.info {
+    margin: 5px;
+    margin-top: 7px;
+    border: 1px solid gray;
+    border-radius: 10px;
+    padding: 2px
+}
+#time {
+    color:chartreuse;
+    font-family: monospace;
+}
+#weather {
+    font-size: 50px;
+    text-align: left;
+    padding-left: 7px;
+}
+#subway {
+    color:red;
+    font-weight: normal;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+    document.body.style.cursor = 'none';    // hide cursor
+
+    setInterval(setTime, 10 * 1000)         // 10 seconds
+    setInterval(ajaxSubway, 60 * 1000)      // 1 minute
+    setInterval(ajaxWeather, 6*60*60*1000)  // 6 hours
+    setTime()
+    ajaxSubway()
+    ajaxWeather()
+});
+
+function setTime() {
+    var date = new Date()
+    var time = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+    $('#time').text(time)
+}
+
+function ajaxWeather() {
+    $.ajax({url: "/weather", method: "POST", dataType: 'json',
+        success: function(result){ setWeather(result, 0); },
+        error:   function(result){ setWeather(result, 1); }
+    });
+}
+
+function ajaxSubway() {
+    var date = new Date()
+    if (date.getHours() < 5){ $('#subway').html('no subway'); return }
+
+    $.ajax({url: "/subway", method: "POST", dataType: 'json',
+        success: function(result){ setSubway(result, 0); },
+        error:   function(result){ setSubway(result, 1); }
+    });
+}
+
+function setSubway(result, err) {
+    if (err){ $('#subway').html('subway error'); return }
+    var subway = `<b>${result.northbound1}</b>, ${result.northbound2} min`
+    $('#subway').html(subway)
+}
+
+function setWeather(result, err) {
+    if (err){ $('#weather').html('weather error'); return }
+
+    var icon_map = {'clear-day': '\u{1F31E}', 'clear-night': '\u{1F319}', 'rain': '\u{1F327}', 
+        'snow': '\u{1F328}', 'sleet': '\u{1F327}', 'wind': '\u{1F343}', 'fog': '\u{1F301}', 
+        'cloudy': '\u{2601}', 'partly-cloudy-day': '\u{26C5}', 'partly-cloudy-night': '\u{2601}'}
+
+    var icon = icon_map[result['icon']]
+    var summary = result['summary']
+    var min = parseInt(result['apparentTemperatureMin'])
+    var max = parseInt(result['apparentTemperatureMax'])
+    var humidity = result['humidity'] * 100
+    var balmy = (min >= 45 && humidity >= 50) ? 'balmy' : 'not balmy'
+
+    var weather = `${icon} ${summary} ${min}\xb0F to ${max}\xb0F` + 
+        `<br/><font style="font-size:30px;text-align:center;">${balmy}: ${humidity}%</font>`
+
+    $('#weather').html(weather)
+}
+</script>
+</head>
+<body>
+    <div id="mainbox">
+        <div id="time" class="info">starting</div>
+        <div id="subway" class="info">starting</div>
+        <div id="weather" class="info">starting</div>
+    </div>
+</body>
+</html>
